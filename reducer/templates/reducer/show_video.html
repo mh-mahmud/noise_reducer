@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+    <h1>Video uploaded successfully</h1>
+    <hr>
+    <h1>Video Preview</h1>
+    <video width='400' controls>
+        <source src="{{ video.video_file.url }}" type="{{ file_type }}">
+        Your browser does not support the video tag.
+    </video>
+
+    <form id="processForm" method="POST">
+        {% csrf_token %}
+        <input type="hidden" name="video_id" value="{{ video.id }}">
+        <button type="submit" id="processButton">Reduce Noise</button>
+    </form>
+
+    <!-- Spinner -->
+    <div id="spinner" style="display: none;">
+        <img src="{% static 'images/spinner.gif' %}" alt="Processing..." />
+    </div>
+    <br>
+
+    <script>
+        document.getElementById("processForm").onsubmit = function(event) {
+            event.preventDefault(); // Prevents form from traditional submission
+
+            // Show the spinner and disable the button
+            document.getElementById("spinner").style.display = "block";
+            document.getElementById("processButton").disabled = true;
+
+            // Send form data using fetch
+            fetch("{% url 'process_video' video_id=video.id %}", {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                },
+                body: new URLSearchParams(new FormData(this)) // Send form data
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'completed') {
+                    // Redirect to download page with video ID
+                    window.location.href = `{% url 'download_video' %}?video_id=${data.video_id}`;
+                } else {
+                    alert("An error occurred during processing.");
+                }
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                alert("An error occurred while processing your request.");
+            })
+            .finally(() => {
+                // Hide the spinner and re-enable the button
+                document.getElementById("spinner").style.display = "none";
+                document.getElementById("processButton").disabled = false;
+            });
+        };
+    </script>
+{% endblock content %}

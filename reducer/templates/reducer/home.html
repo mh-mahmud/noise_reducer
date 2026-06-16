@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    {% if messages %}
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    {% endif %}
+
+    <h6>Reduce Background Noise From Video Easily</h6>
+
+    <p><a href="">Create a free account</a></p>
+
+    <p><a href="{% url 'upload' %}">Try(for dev only)</a></p>
+    
+{% endblock content%}
